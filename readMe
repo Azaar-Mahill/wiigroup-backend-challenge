@@ -1,1 +1,20 @@
+Create the database — in psql or pgAdmin, run:
+CREATE DATABASE wii_providers;
+
+
+npm run migrate
+npm run seed
+
+
+npm run dev
+
+Provider registers (POST /api/providers/register)
+        ↓
+  Status = "pending_verification"
+        ↓
+Admin logs in  (POST /api/auth/login) → gets a JWT
+        ↓
+Admin approves or rejects  (PUT /api/providers/:id/verify)
+        ↓
+  Status = "approved" | "rejected"
 
