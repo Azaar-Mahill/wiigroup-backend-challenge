@@ -13,8 +13,12 @@ const register = async (req, res) => {
   }
 
   const { name, email, phone, business_type } = req.body;
-  const documentPath = req.file ? req.file.filename : null;
   const id = `provider_${uuidv4().replace(/-/g, '').substring(0, 8)}`;
+
+  // Extract document data from memory buffer (stored in PostgreSQL)
+  const documentData = req.file ? req.file.buffer : null;
+  const documentName = req.file ? req.file.originalname : null;
+  const documentMimeType = req.file ? req.file.mimetype : null;
 
   try {
     // Prevent duplicate email
@@ -30,9 +34,9 @@ const register = async (req, res) => {
     }
 
     await pool.query(
-      `INSERT INTO providers (id, name, email, phone, business_type, document_path, status, created_at, updated_at)
-       VALUES ($1, $2, $3, $4, $5, $6, 'pending_verification', NOW(), NOW())`,
-      [id, name, email, phone, business_type, documentPath]
+      `INSERT INTO providers (id, name, email, phone, business_type, document_data, document_name, document_mime_type, status, created_at, updated_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending_verification', NOW(), NOW())`,
+      [id, name, email, phone, business_type, documentData, documentName, documentMimeType]
     );
 
     res.status(201).json({
@@ -145,4 +149,41 @@ const verify = async (req, res) => {
   }
 };
 
-module.exports = { register, getById, verify };
+const getDocument = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await pool.query(
+      `SELECT document_data, document_name, document_mime_type FROM providers WHERE id = $1`,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'Provider not found'
+      });
+    }
+
+    const { document_data, document_name, document_mime_type } = result.rows[0];
+
+    if (!document_data) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'No document found for this provider'
+      });
+    }
+
+    res.setHeader('Content-Type', document_mime_type);
+    res.setHeader('Content-Disposition', `attachment; filename="${document_name}"`);
+    res.send(document_data);
+  } catch (err) {
+    console.error('[Provider] Document fetch error:', err);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to fetch document.'
+    });
+  }
+};
+
+module.exports = { register, getById, verify, getDocument };

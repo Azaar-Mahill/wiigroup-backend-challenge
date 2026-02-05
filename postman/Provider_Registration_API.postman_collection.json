@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "wii-group-provider-registration-api",
     "name": "Provider Registration API",
-    "description": "Wii Group — Provider Registration API Collection.\n\n**Setup:** Set the `base_url` collection variable to your running server (default: http://localhost:3000).\n\n**Flow:**\n1. Run **Admin Login** first — the token is saved automatically.\n2. Run **Register Provider**.\n3. Copy the returned `id` into the `provider_id` collection variable.\n4. Run **Get Provider** or **Verify Provider**.",
+    "description": "Wii Group — Provider Registration API Collection.\n\n**Setup:** Set the `base_url` collection variable to your running server (default: http://localhost:3000).\n\n**Flow:**\n1. Run **Admin Login** first — the token is saved automatically.\n2. Run **Register Provider** (with optional document upload).\n3. Copy the returned `id` into the `provider_id` collection variable.\n4. Run **Get Provider** to view provider details.\n5. Run **Download Provider Document** to retrieve the uploaded document from the database.\n6. Run **Verify Provider** to approve or reject.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
@@ -101,6 +101,20 @@
               "host": ["{{base_url}}"],
               "path": ["api", "providers", "{{provider_id}}"]
             }
+          },
+          "response": []
+        },
+        {
+          "name": "Download Provider Document",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/providers/{{provider_id}}/document",
+              "host": ["{{base_url}}"],
+              "path": ["api", "providers", "{{provider_id}}", "document"]
+            },
+            "description": "Downloads the document uploaded by the provider during registration. The document is stored in PostgreSQL and returned with its original filename and MIME type."
           },
           "response": []
         },

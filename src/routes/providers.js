@@ -1,5 +1,4 @@
 const express = require('express');
-const path = require('path');
 const multer = require('multer');
 const router = express.Router();
 
@@ -8,16 +7,8 @@ const { verifyAdmin } = require('../middleware/auth');
 const providerController = require('../controllers/providerController');
 
 // --- Multer configuration ---
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, '../../uploads'));
-  },
-  filename: (req, file, cb) => {
-    const { v4: uuidv4 } = require('uuid');
-    const uniqueName = `${Date.now()}-${uuidv4()}${path.extname(file.originalname)}`;
-    cb(null, uniqueName);
-  }
-});
+// Using memory storage to store documents in PostgreSQL database instead of disk
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   const allowedExtensions = /\.(pdf|jpg|jpeg|png|doc|docx)$/i;
@@ -50,6 +41,9 @@ router.post('/register', (req, res, next) => {
 
 // GET /api/providers/:id
 router.get('/:id', providerController.getById);
+
+// GET /api/providers/:id/document - Download provider's document
+router.get('/:id/document', providerController.getDocument);
 
 // PUT /api/providers/:id/verify  (admin only)
 router.put('/:id/verify', verifyAdmin, verifyValidation, providerController.verify);
